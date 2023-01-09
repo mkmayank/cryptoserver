@@ -3,8 +3,11 @@ package main
 import (
 	"cc/internal/config"
 	"cc/internal/logger"
+	"context"
 	"fmt"
+	"net/http"
 	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -32,5 +35,28 @@ func main() {
 
 	router.GET("/currency/:symbol", getCurrencyHandler(state))
 
-	router.Run(fmt.Sprintf(":%d", args.serverPort))
+	server := &http.Server{
+		Addr:    fmt.Sprintf(":%d", args.serverPort),
+		Handler: router,
+	}
+
+	go func() {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatal(err.Error())
+		}
+	}()
+
+	<-state.closeChan
+
+	log.Info("stopping server")
+
+	// The context is used to inform the server it has 5 seconds to finish
+	// the request it is currently handling
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := server.Shutdown(ctx); err != nil {
+		log.Fatal(fmt.Sprintf("Server forced to shutdown: %s", err.Error()))
+	}
+
+	log.Info("Server exiting")
 }

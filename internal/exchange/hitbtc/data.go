@@ -1,13 +1,33 @@
 package hitbtc
 
 type tick struct {
-	T int64  `json:"t"`
-	O string `json:"o"`
-	C string `json:"c"`
-	H string `json:"h"`
-	L string `json:"l"`
-	V string `json:"V"`
-	Q string `json:"q"`
+	T  int64  `json:"t"`
+	A  string `json:"a"`
+	A0 string `json:"A"`
+	B  string `json:"b"`
+	B0 string `json:"B"`
+	C  string `json:"c"`
+	O  string `json:"o"`
+	H  string `json:"h"`
+	L  string `json:"l"`
+	V  string `json:"v"`
+	Q  string `json:"q"`
+	P  string `json:"p"`
+	P0 string `json:"P"`
+	L0 int    `json:"L"`
+}
+
+type socketResponse struct {
+	Result struct {
+		Ch            string   `json:"ch"`
+		Subscriptions []string `json:"subscriptions"`
+	} `json:"result"`
+	ID int `json:"id"`
+}
+
+type socketNotification struct {
+	Ch   string          `json:"ch"`
+	Data map[string]tick `json:"data"`
 }
 
 // tickerResponse is the data received on ticker

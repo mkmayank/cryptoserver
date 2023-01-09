@@ -10,7 +10,7 @@ import (
 
 type stateReq struct {
 	symbol  string
-	resChan chan map[string]data.Tick
+	resChan chan stateRes
 }
 
 type stateRes struct {
@@ -24,6 +24,8 @@ type state struct {
 	symbolsInfo map[string]data.SymbolInfo
 
 	reqChan chan stateReq
+
+	closeChan chan struct{}
 }
 
 func (s *state) init(symbols []string) {
@@ -49,19 +51,53 @@ func (s *state) init(symbols []string) {
 	}
 
 	s.tickChan = make(chan map[string]data.Tick)
+	s.reqChan = make(chan stateReq)
+	s.closeChan = make(chan struct{})
 
 	go s.run()
 
-	exchange.StartTicker()
-	exchange.SubscribeTicker(symbols, s.tickChan)
-
+	err = exchange.StartTicker(symbols, s.tickChan)
+	if err != nil {
+		log.Fatal(fmt.Sprintf("unable to start ticker, error: %s", err.Error()))
+	}
 }
 
 func (s *state) run() {
+
+	ticks := map[string]data.Tick{}
+
 	for {
 		select {
-		case tick := <-s.tickChan:
-			fmt.Println(tick)
+		case tick, ok := <-s.tickChan:
+			if !ok {
+				log.Error("ticker is stopped")
+				s.closeChan <- struct{}{}
+				return
+			}
+
+			for symbol, tick := range tick {
+				ticks[symbol] = tick
+			}
+
+		case req := <-s.reqChan:
+
+			res := stateRes{
+				ticks: map[string]data.Tick{},
+			}
+
+			if req.symbol == "" {
+				for symbol, tick := range ticks {
+					res.ticks[symbol] = tick
+				}
+			} else {
+				if _, ok := ticks[req.symbol]; !ok {
+					res.err = fmt.Errorf("unknown symbol: %s", req.symbol)
+				} else {
+					res.ticks[req.symbol] = ticks[req.symbol]
+				}
+			}
+
+			req.resChan <- res
 		}
 	}
 }

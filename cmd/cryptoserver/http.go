@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -14,17 +13,15 @@ func getCurrencyHandler(state state) func(c *gin.Context) {
 
 		symbol := c.Param("symbol")
 
-		log.Info(fmt.Sprintf("asked real time price for %s", symbol))
-
 		stateRes := make(chan stateRes)
-		if symbol == "all" {
-			state.reqChan <- stateReq{
-				symbol: "",
-			}
-		} else {
-			state.reqChan <- stateReq{
-				symbol: symbol,
-			}
+		symbolToAsk := ""
+		if symbol != "all" {
+			symbolToAsk = symbol
+		}
+
+		state.reqChan <- stateReq{
+			symbol:  symbolToAsk,
+			resChan: stateRes,
 		}
 
 		res := <-stateRes

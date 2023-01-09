@@ -10,6 +10,8 @@ var log = logger.Logger{TAG: "hitbtc"}
 
 type HitBtc struct {
 	cfg config.HitBtc
+
+	ticker *ticker
 }
 
 func Exchange() exchange.Exchange {
