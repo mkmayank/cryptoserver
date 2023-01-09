@@ -131,9 +131,9 @@ func (h *HitBtc) StartTicker(symbols []string, subscriberChan chan<- map[string]
 		return
 	}
 
-	// following constants can be made configurable
 	h.ticker = &ticker{
-		url:               url.URL{Scheme: "wss", Host: "api.hitbtc.com", Path: "api/3/ws/public"},
+		url: url.URL{Scheme: "wss", Host: h.cfg.WsAPIHost, Path: h.cfg.WsAPIPath},
+		// can be made configurable
 		id:                123,
 		subscribedSymbols: symbols,
 		subscriberChan:    subscriberChan,
