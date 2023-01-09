@@ -1,0 +1,9 @@
+{
+    "hitbtc": {
+        "rest_api": "https://api.hitbtc.com/api/3",
+        "ticker_channel": "ticker/1s"
+    },
+    "paths": {
+        "work_dir": "/tmp/logs"
+    }
+}
